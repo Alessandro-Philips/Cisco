@@ -1,178 +1,179 @@
 # 📘 CCNA3 - Enterprise Networking, Security, and Automation
 
-## 🔭 OSPF - Databases en Verificatiecommando's
+## 🛠️ OSPF - Open Shortest Path First
 
-OSPF gebruikt drie types van databases om correcte routing te garanderen:
+OSPF is een dynamisch link-state routing protocol dat gebruik maakt van gebieden om routing informatie efficiënt te verspreiden. Elke router bouwt een gedetailleerde kaart van het netwerk (LSDB) en gebruikt Dijkstra’s algoritme om de beste paden te berekenen.
 
-### 📂 1. Adjacency Database (Neighbor Table)
+### 🔹 Belangrijke OSPF componenten:
+
+* **Router ID**: Unieke identificatie per router, meestal hoogste IP of handmatig ingesteld.
+* **Area**: Logische verdeling van het OSPF-netwerk. Area 0 is de backbone.
+* **Cost**: Routing metric gebaseerd op bandbreedte; lagere cost = betere route.
+* **LSDB**: Link State Database, toont het volledige topologische overzicht.
+* **DR/BDR**: Designated Router / Backup Designated Router in multi-access netwerken.
+
+### 🧾 Basisconfiguratie (Single-Area)
+
 ```bash
+router ospf 1
+ router-id 1.1.1.1
+ network 10.0.0.0 0.255.255.255 area 0
+```
+
+### Alternatief via interfaces
+
+```bash
+interface g0/0
+ ip ospf 1 area 0
+```
+
+### Default Routes in OSPF
+
+```bash
+ip route 0.0.0.0 0.0.0.0 192.0.2.1
+router ospf 1
+ default-information originate
+```
+
+### Metrics & Cost
+
+```bash
+interface g0/0/0
+ ip ospf cost 10
+router ospf 1
+ auto-cost reference-bandwidth 10000
+```
+
+### Passive Interfaces
+
+```bash
+router ospf 1
+ passive-interface default
+ no passive-interface g0/0
+```
+
+### Multiarea Configuratie
+
+```bash
+interface g0/1
+ ip ospf 1 area 23
+```
+
+### Verificatiecommando’s
+
+```bash
+show ip ospf
 show ip ospf neighbor
-```
-
-### 📂 2. Link-State Database (LSDB / Topology Table)
-```bash
 show ip ospf database
-```
-
-### 📂 3. Forwarding Database (Routing Table)
-```bash
-show ip route
+show ip ospf interface brief
 ```
 
 ---
 
-## 📍 Routing Concepten en Verwerking
+## 🔧 Basisconfiguratie (Router/Switch)
 
-### 🧐 Best Path Logic & Forwarding
+### Vanaf `enable` mode:
+
 ```bash
-show ip route
-show ipv6 route
+show running-config
+show startup-config
+show version
+show interfaces
 ```
 
-### 📦 Cisco Packet Forwarding
-- Process switching
-- Fast switching
-- CEF (Cisco Express Forwarding)
+### Vanaf `configure terminal`:
 
-### 🛠️ Basisconfiguratie router
 ```bash
 hostname R1
+no ip domain-lookup
 enable secret class
+service password-encryption
+banner motd # Unauthorized access is prohibited! #
+```
+
+### Console en VTY lijnen:
+
+```bash
 line console 0
- logging synchronous
  password cisco
  login
+ logging synchronous
 line vty 0 4
  password cisco
  login
  transport input ssh telnet
-service password-encryption
-banner motd # WARNING: Unauthorized access is prohibited! #
 ```
 
-### 🌐 Interfaceconfiguratie
+### Interface instellen:
+
 ```bash
-interface g0/0/0
- ip address 10.0.1.1 255.255.255.0
- ipv6 address 2001:db8:acad:1::1/64
- ipv6 address fe80::1:a link-local
+interface g0/0
+ ip address 192.168.1.1 255.255.255.0
  no shutdown
 ```
 
----
+## 🛰️ Statische Routing
 
-## 📌 Static Routing
+### IPv4:
 
-### 📘 IPv4 Static Route
 ```bash
-ip route [network-address] [subnet-mask] [ip-address | exit-intf [ip-address]] [distance]
+ip route 192.168.2.0 255.255.255.0 10.0.0.2
 ```
 
-### 📘 IPv6 Static Route
+### IPv6:
+
 ```bash
-ipv6 route [ipv6-prefix/prefix-length] [ipv6-address | exit-intf [ipv6-address]] [distance]
+ipv6 route 2001:db8::/64 2001:db8::2
 ```
 
-### ✅ IPv4 Examples
+### Default route (quad-zero):
+
 ```bash
-ip route 172.16.1.0 255.255.255.0 172.16.2.2
-ip route 192.168.1.0 255.255.255.0 s0/1/0
-ip route 192.168.2.0 255.255.255.0 s0/1/0 172.16.2.2
+ip route 0.0.0.0 0.0.0.0 10.0.0.2
+ipv6 route ::/0 2001:db8::2
 ```
 
-### ✅ IPv6 Examples
+### Floating static route:
+
 ```bash
-ipv6 route 2001:db8:acad:1::/64 2001:db8:acad:2::2
-ipv6 route 2001:db8:cafe:1::/64 s0/1/0
-ipv6 route 2001:db8:cafe:2::/64 s0/1/0 2001:db8:acad:2::2
+ip route 192.168.3.0 255.255.255.0 10.0.0.2 5
 ```
 
----
+## 🧪 Samenvattende show-commando’s
 
-## 🌍 Default Routes (quad-zero & ::/0)
+### Configuratie:
 
-### IPv4
 ```bash
-ip route 0.0.0.0 0.0.0.0 172.16.2.2
+show running-config
+show startup-config
+show ip protocols
 ```
 
-### IPv6
+### Interface en route:
+
 ```bash
-ipv6 route ::/0 2001:db8:acad:2::2
-```
-
----
-
-## ↺ Floating Static Routes
-
-Gebruik deze met een hogere administrative distance als back-up:
-```bash
-ip route 0.0.0.0 0.0.0.0 10.10.10.2 5
-ipv6 route ::/0 2001:db8:feed:10::2 5
-```
-
----
-
-## 🧑‍⚖️ Static Host Routes
-
-### IPv4 Host Route
-```bash
-ip route 209.165.200.238 255.255.255.255 198.51.100.2
-```
-
-### IPv6 Host Route
-```bash
-ipv6 route 2001:db8:acad:2::238/128 2001:db8:acad:1::2
-```
-
-### IPv6 Host Route met link-local next-hop
-```bash
-ipv6 route 2001:db8:acad:2::238/128 fe80::2 link-local-interface
-```
-
----
-
-## 🔎 Verificatie Static Routes
-```bash
-show ip route static
-show ipv6 route static
-show ip route | include [network]
-show running-config | section ip route
-```
-
----
-
-## ⚠️ Troubleshooting Static & Default Routes
-
-### Belangrijk gedrag
-- Packet zonder match in routing table ➔ **drop** + ICMP unreachable
-- Static route heeft voorkeur als er geen dynamic route aanwezig is
-- Default route vangt alles op dat geen specifieke match vindt
-
-### Packetverwerking over meerdere routers
-1. R1 ontvangt pakket van PC1 ➔ controleert routing table
-2. Geen match? ➔ gebruik default static route
-3. Nieuwe encapsulation + forwarding via S0/1/0
-4. R2 ontvangt, herhaalt proces ➔ stuurt door naar R3
-5. R3 vindt directe match met PC3 subnet, stuurt ARP request, verzendt naar PC3
-
-### Handige commando’s bij troubleshooting
-```bash
-ping [ip-adres]
-traceroute [ip-adres]
 show ip interface brief
 show ip route
-show running-config
-show arp
+show ip route ospf
 ```
 
-### Fout oplossen voorbeeld
+### OSPF specifiek:
+
 ```bash
-R2(config)# no ip route 172.16.3.0 255.255.255.0 192.168.1.1
-R2(config)# ip route 172.16.3.0 255.255.255.0 172.16.2.1
+show ip ospf
+show ip ospf interface
+show ip ospf interface brief
+show ip ospf interface [type number]
+show ip ospf database
+show ip ospf neighbor
 ```
 
-### Routingtable bekijken vanaf bepaald punt
+### OSPF resetten:
+
 ```bash
-show ip route | begin Gateway
+clear ip ospf process
 ```
+
+---
+
+> Deze samenvatting combineert jouw oorspronkelijke overzicht en alle uitgebreide informatie uit het handboek en dia’s. Laat weten of je dit wil opdelen per module of onderwerp!

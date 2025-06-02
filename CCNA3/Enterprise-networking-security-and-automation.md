@@ -169,7 +169,7 @@ no ip ospf dead-interval
 **Statische default route maken:**
 
 ```bash
-ip route 0.0.0.0 0.0.0.0 loopback1
+ip route 0.0.0.0 0.0.0.0 next hop address/loopback1
 ```
 
 **Adverteren via OSPF:**
